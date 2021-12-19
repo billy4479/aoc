@@ -1,6 +1,6 @@
 use std::{fmt::Debug, fs, str::FromStr};
 
-pub fn read_input<T>(file_name: &str) -> Vec<T>
+pub fn parse_input_file_as_vec<T>(file_name: &str) -> Vec<T>
 where
     T: FromStr,
     <T as FromStr>::Err: Debug,
