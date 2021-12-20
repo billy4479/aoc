@@ -5,7 +5,7 @@ pub mod d0x04 {
     use std::str::FromStr;
 
     #[derive(Clone, Copy)]
-    struct Number {
+    pub struct Number {
         value: i32,
         selected: bool,
     }
@@ -17,14 +17,15 @@ pub mod d0x04 {
                 "{}{:>2}",
                 if self.selected { "!" } else { " " },
                 self.value
-            );
+            )?;
             Ok(())
         }
     }
 
     const TABLE_SIZE: usize = 5;
 
-    struct Table {
+    #[derive(Clone)]
+    pub struct Table {
         data: [[Number; TABLE_SIZE]; TABLE_SIZE],
         score: i32,
     }
@@ -33,9 +34,9 @@ pub mod d0x04 {
         fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
             for (_x, row) in self.data.iter().enumerate() {
                 for (_y, col) in row.iter().enumerate() {
-                    write!(f, "{}", col);
+                    write!(f, "{} ", col)?;
                 }
-                writeln!(f);
+                writeln!(f)?;
             }
             Ok(())
         }
@@ -72,9 +73,77 @@ pub mod d0x04 {
         }
     }
 
-    pub struct InputData(Vec<Table>, Vec<i32>);
+    enum Where {
+        Column,
+        Row,
+    }
 
-    pub fn parse_input(file: &str) -> InputData {
+    struct Win {
+        position: Where,
+        index: usize,
+    }
+
+    impl Table {
+        fn has_won(&self) -> Option<Win> {
+            // Check rows
+            for (x, row) in self.data.iter().enumerate() {
+                if row.iter().filter(|n| n.selected).count() == TABLE_SIZE {
+                    return Some(Win {
+                        position: Where::Row,
+                        index: x,
+                    });
+                }
+            }
+
+            // `i` is the column index
+            for i in 0..TABLE_SIZE {
+                let mut lost = false;
+                for (_x, row) in self.data.iter().enumerate() {
+                    if !row[i].selected {
+                        lost = true;
+                    }
+                }
+
+                if !lost {
+                    return Some(Win {
+                        position: Where::Column,
+                        index: i,
+                    });
+                }
+            }
+
+            None
+        }
+
+        fn compute_score(&self) -> i32 {
+            let mut score = 0;
+            for (_x, row) in self.data.iter().enumerate() {
+                for (_y, col) in row.iter().enumerate() {
+                    if !col.selected {
+                        score += col.value;
+                    }
+                }
+            }
+            score
+        }
+
+        fn put_number(&mut self, n: i32) {
+            self.data.iter_mut().for_each(|row| {
+                row.iter_mut()
+                    .filter(|v| v.value == n)
+                    .for_each(|v| v.selected = true);
+            });
+
+            match self.has_won() {
+                Some(_win) => {
+                    self.score = self.compute_score();
+                }
+                None => {}
+            }
+        }
+    }
+
+    pub fn parse_input(file: &str) -> (Vec<Table>, Vec<i32>) {
         let s = fs::read_to_string(file).unwrap();
         let mut iter = s.split("\n\n");
         let nums = iter
@@ -89,14 +158,30 @@ pub mod d0x04 {
             .map(Result::unwrap)
             .collect::<Vec<Table>>();
 
-        InputData { 0: t, 1: nums }
+        (t, nums)
     }
 
-    pub fn part1(input: &InputData) -> i32 {
-        0
+    pub fn part1(input: &(Vec<Table>, Vec<i32>)) -> i32 {
+        let (tables_immut, nums) = input;
+        let mut tables = tables_immut.clone();
+        let mut score = 0;
+        nums.iter().for_each(|n| {
+            if score != 0 {
+                return;
+            }
+            tables.iter_mut().for_each(|t| {
+                t.put_number(*n);
+                if t.score != 0 {
+                    score = t.score * n;
+                    return;
+                }
+            });
+        });
+
+        score
     }
 
-    pub fn part2(input: &InputData) -> i32 {
+    pub fn part2(input: &(Vec<Table>, Vec<i32>)) -> i32 {
         0
     }
 }
