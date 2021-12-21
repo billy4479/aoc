@@ -38,6 +38,8 @@ pub mod d0x04 {
                 }
                 writeln!(f)?;
             }
+
+            writeln!(f, "Score: {}\n", self.score)?;
             Ok(())
         }
     }
@@ -128,6 +130,9 @@ pub mod d0x04 {
         }
 
         fn put_number(&mut self, n: i32) {
+            if self.score != 0 {
+                return;
+            }
             self.data.iter_mut().for_each(|row| {
                 row.iter_mut()
                     .filter(|v| v.value == n)
@@ -182,6 +187,39 @@ pub mod d0x04 {
     }
 
     pub fn part2(input: &(Vec<Table>, Vec<i32>)) -> i32 {
-        0
+        let (tables_immut, nums) = input;
+        let mut tables = tables_immut.clone();
+
+        let mut last: Table = Table {
+            data: [[Number {
+                value: 0,
+                selected: false,
+            }; TABLE_SIZE]; TABLE_SIZE],
+            score: 0,
+        };
+
+        let mut score = 0;
+        let mut last_n = 0;
+
+        nums.iter().for_each(|n| {
+            if score != 0 {
+                return;
+            }
+
+            tables.iter_mut().for_each(|table| {
+                let prev_score = table.score;
+                table.put_number(*n);
+                if (table.score != prev_score) && (table.score != 0) {
+                    last = table.clone();
+                    last_n = *n;
+                }
+            });
+
+            if tables.iter().filter(|t| t.score == 0).count() == 0 {
+                score = last.compute_score() * last_n;
+            }
+        });
+
+        score
     }
 }
