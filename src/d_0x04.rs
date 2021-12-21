@@ -75,25 +75,12 @@ pub mod d0x04 {
         }
     }
 
-    enum Where {
-        Column,
-        Row,
-    }
-
-    struct Win {
-        position: Where,
-        index: usize,
-    }
-
     impl Table {
-        fn has_won(&self) -> Option<Win> {
+        fn has_won(&self) -> bool {
             // Check rows
-            for (x, row) in self.data.iter().enumerate() {
+            for (_x, row) in self.data.iter().enumerate() {
                 if row.iter().filter(|n| n.selected).count() == TABLE_SIZE {
-                    return Some(Win {
-                        position: Where::Row,
-                        index: x,
-                    });
+                    return true;
                 }
             }
 
@@ -107,14 +94,11 @@ pub mod d0x04 {
                 }
 
                 if !lost {
-                    return Some(Win {
-                        position: Where::Column,
-                        index: i,
-                    });
+                    return true;
                 }
             }
 
-            None
+            false
         }
 
         fn compute_score(&self) -> i32 {
@@ -139,11 +123,8 @@ pub mod d0x04 {
                     .for_each(|v| v.selected = true);
             });
 
-            match self.has_won() {
-                Some(_win) => {
-                    self.score = self.compute_score();
-                }
-                None => {}
+            if self.has_won() {
+                self.score = self.compute_score();
             }
         }
     }
