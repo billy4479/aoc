@@ -4,11 +4,13 @@ pub mod d_0x01;
 pub mod d_0x02;
 pub mod d_0x03;
 pub mod d_0x04;
+pub mod d_0x05;
 
 use d_0x01::*;
 use d_0x02::*;
 use d_0x03::*;
 use d_0x04::*;
+use d_0x05::*;
 
 macro_rules! solve_day {
     ($m:tt) => {
@@ -29,4 +31,5 @@ fn main() {
     solve_day!(d0x02);
     solve_day!(d0x03);
     solve_day!(d0x04);
+    solve_day!(d0x05);
 }
